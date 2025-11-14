@@ -5,6 +5,19 @@
   text-align: center;
 }
 
+/* Add to your main CSS file or Tailwind config */
+.red-theme {
+  --primary: #dc2626;    /* red-600 */
+  --primary-dark: #b91c1c; /* red-700 */
+  --primary-light: #fef2f2; /* red-50 */
+  --accent: #000000;
+  --background: #ffffff;
+  --surface: #f8fafc;
+  --text: #1f2937;
+  --text-light: #6b7280;
+  --border: #e5e7eb;
+}
+
 .logo {
   height: 6em;
   padding: 1.5em;

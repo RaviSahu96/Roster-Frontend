@@ -38,7 +38,6 @@ export default function MemberForm({ onSubmit, initial }) {
   const [form, setForm] = useState(initial ?? { name: '', email: '', skill: '', active: true })
   const [errors, setErrors] = useState({})
 
-  // Refresh form when editing
   useEffect(() => {
     setForm(initial ?? { name: '', email: '', skill: '', active: true })
     setErrors({})
@@ -46,7 +45,6 @@ export default function MemberForm({ onSubmit, initial }) {
 
   const isEditing = !!initial?.id
 
-  // ✅ Validation logic
   const validate = () => {
     const newErrors = {}
     if (!form.name.trim()) newErrors.name = 'Name is required.'
@@ -62,78 +60,104 @@ export default function MemberForm({ onSubmit, initial }) {
     if (!validate()) return
     await onSubmit(form)
     setErrors({})
-    setForm(initial ?? { name: '', email: '', skill: '', active: true });
+    setForm(initial ?? { name: '', email: '', skill: '', active: true })
   }
 
   return (
-    <form className="space-y-3" onSubmit={handleSubmit}>
-      <div className="grid md:grid-cols-3 gap-3">
-        {/* Name Field */}
-        <div>
-          <label className="text-xs text-gray-500">Name <span className="text-red-500">*</span></label>
-          <Input
-            value={form.name}
-            onChange={e => setForm({ ...form, name: e.target.value })}
-            placeholder="Enter member name"
-          />
-          {errors.name && <div className="text-red-600 text-sm mt-1">{errors.name}</div>}
+    <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center shadow-lg">
+          <span className="text-white font-bold text-lg">👤</span>
         </div>
-
-        {/* Email Field */}
-        <div>
-          <label className="text-xs text-gray-500">Email <span className="text-red-500">*</span></label>
-          <Input
-            type="email"
-            value={form.email}
-            onChange={e => setForm({ ...form, email: e.target.value })}
-            placeholder="Enter email address"
-          />
-          {errors.email && <div className="text-red-600 text-sm mt-1">{errors.email}</div>}
-        </div>
-
-        {/* Skill Field */}
-        <div>
-          <label className="text-xs text-gray-500">Skill <span className="text-red-500">*</span></label>
-          <Input
-            value={form.skill}
-            onChange={e => setForm({ ...form, skill: e.target.value })}
-            placeholder="Enter skill"
-          />
-          {errors.skill && <div className="text-red-600 text-sm mt-1">{errors.skill}</div>}
-        </div>
+        <h2 className="text-2xl font-bold text-white">
+          {isEditing ? 'Edit Member' : 'Add New Member'}
+        </h2>
       </div>
 
-      {/* Active Checkbox */}
-      <div className="flex items-center gap-3">
-        <input
-          id="active"
-          type="checkbox"
-          checked={form.active ?? true}
-          onChange={e => setForm({ ...form, active: e.target.checked })}
-          className="w-4 h-4"
-        />
-        <label htmlFor="active" className="text-sm">Active</label>
-      </div>
+      <form className="space-y-6" onSubmit={handleSubmit}>
+        <div className="grid md:grid-cols-3 gap-6">
+          <div>
+            <label className="text-sm font-medium text-gray-300 mb-2 block">
+              Name <span className="text-red-400">*</span>
+            </label>
+            <Input
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+              placeholder="Enter member name"
+            />
+            {errors.name && (
+              <div className="text-red-300 text-sm mt-2 flex items-center gap-1">
+                ⚠ {errors.name}
+              </div>
+            )}
+          </div>
 
-      {/* Buttons */}
-      <div className="flex gap-2">
-        <Button type="submit">
-          {isEditing ? 'Update Member' : 'Save Member'}
-        </Button>
+          <div>
+            <label className="text-sm font-medium text-gray-300 mb-2 block">
+              Email <span className="text-red-400">*</span>
+            </label>
+            <Input
+              type="email"
+              value={form.email}
+              onChange={e => setForm({ ...form, email: e.target.value })}
+              placeholder="Enter email address"
+            />
+            {errors.email && (
+              <div className="text-red-300 text-sm mt-2 flex items-center gap-1">
+                ⚠ {errors.email}
+              </div>
+            )}
+          </div>
 
-        {isEditing && (
-          <Button
-            type="button"
-            className="bg-gray-600 hover:bg-gray-700"
-            onClick={() => {
-              setForm({ name: '', email: '', skill: '', active: true })
-              setErrors({})
-            }}
-          >
-            Cancel
+          <div>
+            <label className="text-sm font-medium text-gray-300 mb-2 block">
+              Skill <span className="text-red-400">*</span>
+            </label>
+            <Input
+              value={form.skill}
+              onChange={e => setForm({ ...form, skill: e.target.value })}
+              placeholder="Enter skill"
+            />
+            {errors.skill && (
+              <div className="text-red-300 text-sm mt-2 flex items-center gap-1">
+                ⚠ {errors.skill}
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3 p-4 bg-red-900 rounded-lg border border-red-700">
+          <input
+            id="active"
+            type="checkbox"
+            checked={form.active ?? true}
+            onChange={e => setForm({ ...form, active: e.target.checked })}
+            className="w-5 h-5 text-red-600 bg-gray-800 border-gray-600 rounded focus:ring-red-500 focus:ring-2"
+          />
+          <label htmlFor="active" className="text-sm font-medium text-white">
+            Active Member
+          </label>
+        </div>
+
+        <div className="flex gap-3 pt-4 border-t border-gray-700">
+          <Button type="submit" className="flex-1">
+            {isEditing ? 'Update Member' : 'Save Member'}
           </Button>
-        )}
-      </div>
-    </form>
+
+          {isEditing && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setForm({ name: '', email: '', skill: '', active: true })
+                setErrors({})
+              }}
+            >
+              Cancel
+            </Button>
+          )}
+        </div>
+      </form>
+    </div>
   )
 }
