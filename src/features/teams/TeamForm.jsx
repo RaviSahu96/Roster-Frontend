@@ -15,7 +15,7 @@ export default function TeamForm({ initial, onSubmit }) {
   const [backupId, setBackupId] = useState(initial?.backup?.id ?? '')
   const [error, setError] = useState('')
   const isEditing = !!initial?.code
-  const MAX = 3
+  const MAX = 4
 
   useEffect(() => {
     const loadData = async () => {

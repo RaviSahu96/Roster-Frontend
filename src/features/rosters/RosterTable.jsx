@@ -1,90 +1,77 @@
-import Table from '../../components/Table'
+import Table from "../../components/Table"
 
-const shifts = ['MORNING', 'EVENING', 'NIGHT']
+const shifts = ["MORNING", "EVENING", "NIGHT"]
 
-export default function RosterTable({ roster }) {
+export default function RosterTable({ roster, teamMap }) {
   if (!roster) return null
 
-  const getMembersForShift = (day, shift) => {
-    const entry = (roster.entries || []).find(e => e.day === day && e.shift === shift)
-    return entry ? (entry.memberNames || []) : []
+  const days = [...new Set(roster.entries.map(e => e.date))].sort()
+
+  const getMembers = (date, shift) => {
+    const entry = roster.entries.find(
+      e => e.date === date && e.shift === shift
+    )
+    if (!entry) return []
+
+    const tm = teamMap[entry.teamCode]
+    if (!tm) return []
+
+    let all = [...tm.members]
+    if (tm.backup) all.push(`(Backup) ${tm.backup}`)
+
+    return all
   }
 
-  const getShiftColor = (shift) => {
-    switch (shift) {
-      case 'MORNING': return 'bg-red-900 text-red-100 border-red-700'
-      case 'EVENING': return 'bg-blue-900 text-blue-100 border-blue-700'
-      case 'NIGHT': return 'bg-purple-900 text-purple-100 border-purple-700'
-      default: return 'bg-gray-700 text-gray-100'
-    }
-  }
-
-  const formatDate = (dateStr) => {
-    const date = new Date(dateStr)
-    return {
-      full: date.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' }),
-      short: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
-    }
+  const formatDate = d => {
+    const dt = new Date(d)
+    return dt.toLocaleDateString("en-US", {
+      weekday: "short",
+      month: "short",
+      day: "numeric"
+    })
   }
 
   return (
-    <Table headers={['Date', 'Morning Shift (08:00-16:00)', 'Evening Shift (16:00-00:00)', 'Night Shift (00:00-08:00)']}>
-      {roster.days?.map(day => {
-        const dateInfo = formatDate(day)
-        return (
-          <tr key={day} className="hover:bg-gray-750 transition-colors duration-150">
-            <td className="px-4 py-3.5 font-semibold text-white border-r border-gray-700">
-              <div>{dateInfo.full}</div>
-              <div className="text-sm text-gray-400 font-normal">{dateInfo.short}</div>
-            </td>
-            <td className="px-4 py-3.5">
-              <div className="space-y-1">
-                {getMembersForShift(day, 'MORNING').map((member, idx) => (
-                  <span 
-                    key={idx}
-                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${getShiftColor('MORNING')} mr-1 mb-1`}
-                  >
-                    {member}
-                  </span>
-                ))}
-                {getMembersForShift(day, 'MORNING').length === 0 && (
-                  <span className="text-gray-400 text-sm">—</span>
+    <Table
+      headers={[
+        "Date",
+        "Morning Shift",
+        "Evening Shift",
+        "Night Shift"
+      ]}
+    >
+      {days.map(date => (
+        <tr key={date} className="hover:bg-gray-750 transition-all">
+          <td className="px-4 py-3.5 text-white border-r border-gray-700">
+            {formatDate(date)}
+          </td>
+
+          {shifts.map(shift => {
+            const members = getMembers(date, shift)
+            return (
+              <td
+                key={shift}
+                className="px-4 py-3.5 text-white"
+              >
+                {members.length ? (
+                  <div className="space-y-1">
+                    {members.map((m, i) => (
+                      <div
+                        key={i}
+                        className="inline-block bg-gray-700 text-white px-2 py-1 rounded text-xs mr-1 mb-1"
+                      >
+                        {m}
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="text-gray-400">—</span>
                 )}
-              </div>
-            </td>
-            <td className="px-4 py-3.5">
-              <div className="space-y-1">
-                {getMembersForShift(day, 'EVENING').map((member, idx) => (
-                  <span 
-                    key={idx}
-                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${getShiftColor('EVENING')} mr-1 mb-1`}
-                  >
-                    {member}
-                  </span>
-                ))}
-                {getMembersForShift(day, 'EVENING').length === 0 && (
-                  <span className="text-gray-400 text-sm">—</span>
-                )}
-              </div>
-            </td>
-            <td className="px-4 py-3.5">
-              <div className="space-y-1">
-                {getMembersForShift(day, 'NIGHT').map((member, idx) => (
-                  <span 
-                    key={idx}
-                    className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium border ${getShiftColor('NIGHT')} mr-1 mb-1`}
-                  >
-                    {member}
-                  </span>
-                ))}
-                {getMembersForShift(day, 'NIGHT').length === 0 && (
-                  <span className="text-gray-400 text-sm">—</span>
-                )}
-              </div>
-            </td>
-          </tr>
-        )
-      })}
+              </td>
+            )
+          })}
+        </tr>
+      ))}
     </Table>
   )
 }

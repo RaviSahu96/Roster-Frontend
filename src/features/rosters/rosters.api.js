@@ -22,41 +22,35 @@
 
 import api from '../../lib/api'
 
-// normalize to YYYY-MM-DD
-function toIsoDate(input) {
-  if (!input) return input;
-  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})$/.exec(input);
-  if (m) return `${m[1]}-${m[2].padStart(2,'0')}-${m[3].padStart(2,'0')}`;
-  m = /^(\d{1,2})-(\d{1,2})-(\d{4})$/.exec(input);
-  if (m) return `${m[3]}-${m[2].padStart(2,'0')}-${m[1].padStart(2,'0')}`;
-  return input;
-}
-
-export async function createRoster(body) {
+export async function createRoster({ year, month, teamIds }) {
   const payload = {
-    weekStart: toIsoDate(body.weekStart),
-    teamSize: Number(body.teamSize || 3),
-    teamIds: body.teamIds || [],           // send teamIds
-    includeBackup: !!body.includeBackup
-  };
-  const { data } = await api.post('/rosters/create', payload);
-  return data;
+    year: Number(year),
+    month: Number(month),
+    teamIds: teamIds || []
+  }
+  const { data } = await api.post('/rosters/create-monthly', payload)
+  return data
 }
 
-export async function getRoster(weekStart) {
-  const { data } = await api.get('/rosters', { params: { weekStart: toIsoDate(weekStart) } });
-  return data;
+export async function getRoster(year, month) {
+  const { data } = await api.get('/rosters/monthly', {
+    params: { year, month }
+  })
+  return data
 }
 
-export async function exportRoster(weekStart) {
-  const res = await api.get('/rosters/export', {
-    params: { weekStart: toIsoDate(weekStart) },
+export async function exportRoster(year, month) {
+  const res = await api.get('/rosters/export-monthly', {
+    params: { year, month },
     responseType: 'blob'
-  });
-  const url = URL.createObjectURL(res.data);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `roster-${toIsoDate(weekStart)}.xlsx`;
-  document.body.appendChild(a); a.click(); a.remove();
-  URL.revokeObjectURL(url);
+  })
+
+  const url = URL.createObjectURL(res.data)
+  const a = document.createElement('a')
+  a.href = url
+  a.download = `roster-${year}-${month}.xlsx`
+  document.body.appendChild(a)
+  a.click()
+  a.remove()
+  URL.revokeObjectURL(url)
 }

@@ -1,13 +1,33 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Button from '../../components/Button'
 import RosterForm from './RosterForm'
 import RosterTable from './RosterTable'
 import RosterPreview from './RosterPreview'
 import { createRoster, getRoster, exportRoster } from './rosters.api'
+import { getTeams } from '../teams/teams.api'   // <-- IMPORTANT
 
 export default function RosterPage() {
   const [roster, setRoster] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [teams, setTeams] = useState([])
+
+  // -------------------------
+  // LOAD ALL TEAMS (with members + backup)
+  // -------------------------
+  useEffect(() => {
+    getTeams().then(setTeams)
+  }, [])
+
+  // -------------------------
+  // Build mapping: TEAM → MEMBERS + BACKUP
+  // -------------------------
+  const teamMap = {}
+  teams.forEach(t => {
+    teamMap[t.code] = {
+      members: t.members?.map(m => m.name) || [],
+      backup: t.backup?.name || null
+    }
+  })
 
   return (
     <div className="space-y-8">
@@ -18,6 +38,7 @@ export default function RosterPage() {
       </div>
 
       <div className="grid lg:grid-cols-3 gap-8">
+        
         {/* Form Section */}
         <div className="lg:col-span-1">
           <div className="bg-gray-800 rounded-lg border border-gray-700 p-6 sticky top-6">
@@ -25,19 +46,19 @@ export default function RosterPage() {
               <div className="w-1 h-6 bg-red-600 rounded-full"></div>
               <h3 className="text-lg font-semibold text-white">Generate Monthly Roster</h3>
             </div>
-            <RosterForm 
+
+            <RosterForm
               onCreate={async (year, month, teamIds) => {
                 setLoading(true)
                 try {
-                  if (!teamIds?.length || teamIds.length < 3) {
-                    alert('Please select at least 3 teams.')
+                  if (!teamIds || teamIds.length < 3) {
+                    alert("Please select at least 3 teams.")
                     return
                   }
                   const data = await createRoster({ year, month, teamIds })
                   setRoster(data)
                 } catch (e) {
-                  const msg = e?.response?.data?.message || e?.response?.data?.error || e.message || 'Failed to create roster'
-                  alert(msg)
+                  alert(e?.response?.data?.message || e.message)
                 } finally {
                   setLoading(false)
                 }
@@ -49,6 +70,7 @@ export default function RosterPage() {
 
         {/* Preview Section */}
         <div className="lg:col-span-2 space-y-6">
+
           {/* Actions */}
           {roster && (
             <div className="bg-gray-800 rounded-lg border border-gray-700 p-6">
@@ -58,14 +80,14 @@ export default function RosterPage() {
                   <div>
                     <h3 className="text-lg font-semibold text-white">Roster Actions</h3>
                     <p className="text-sm text-gray-400 mt-1">
-                      {roster.monthName} {roster.year} • {roster.entries?.length || 0} assignments
+                      {roster.month} / {roster.year} • {roster.entries?.length} assignments
                     </p>
                   </div>
                 </div>
+
                 <div className="flex gap-3">
-                  <Button 
+                  <Button
                     onClick={async () => {
-                      if (!roster?.year || !roster?.month) return alert('Generate or load a roster first')
                       const data = await getRoster(roster.year, roster.month)
                       setRoster(data)
                     }}
@@ -74,9 +96,9 @@ export default function RosterPage() {
                   >
                     Refresh
                   </Button>
-                  <Button 
+
+                  <Button
                     onClick={async () => {
-                      if (!roster?.year || !roster?.month) return alert('Generate or load a roster first')
                       await exportRoster(roster.year, roster.month)
                     }}
                     variant="primary"
@@ -89,19 +111,22 @@ export default function RosterPage() {
             </div>
           )}
 
-          {/* Enhanced Preview */}
-          <RosterPreview roster={roster} />
+          {/* ---------------- Preview with Members --------------- */}
+          <RosterPreview roster={roster} teamMap={teamMap} />
 
-          {/* Detailed Table */}
+          {/* ---------------- Detailed Table with Members --------------- */}
           {roster && (
             <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-700 bg-gray-900">
                 <div className="flex items-center gap-2">
                   <div className="w-1 h-6 bg-red-600 rounded-full"></div>
-                  <h3 className="text-lg font-semibold text-white">Detailed Monthly Schedule</h3>
+                  <h3 className="text-lg font-semibold text-white">
+                    Detailed Monthly Schedule
+                  </h3>
                 </div>
               </div>
-              <RosterTable roster={roster} />
+
+              <RosterTable roster={roster} teamMap={teamMap} />
             </div>
           )}
         </div>
